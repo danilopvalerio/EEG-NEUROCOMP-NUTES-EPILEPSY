@@ -11,6 +11,7 @@ Pipeline completo para detecção de crises epilépticas utilizando o dataset CH
 ## 📂 Estrutura do Projeto
 
 ```
+OBS: Lembre-se de criar as pastas data e data_processed
 .
 ├── data/                  # Dataset bruto (CHB-MIT)
 │   ├── chb01
