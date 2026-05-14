@@ -1,9 +1,9 @@
-# Estudos de Detecção de Crises Epilépticas em EEG
+# Epileptic Seizure Detection Studies in EEG
 
-Este repositório reúne dois estudos separados e independentes sobre detecção de crises epilépticas em sinais de EEG.
+This repository brings together two separate and independent studies on epileptic seizure detection in EEG signals.
 
-O primeiro estudo é uma exploração inicial do dataset CHB-MIT, com foco em entender a estrutura dos dados, o pré-processamento e uma avaliação base para comparação.
+The first study is an initial exploration of the CHB-MIT dataset, focused on understanding the data structure, preprocessing, and a baseline evaluation for comparison.
 
-O segundo estudo é um pipeline completo para o dataset EEG Wearable SeizeIT2, no qual foram testados 3 modelos, diferentes filtros, extrações de features e técnicas de classificação em dois níveis: por evento e por janela.
+The second study is a complete pipeline for the EEG Wearable SeizeIT2 dataset, where 3 models, different filters, feature extractions, and classification techniques were tested at two levels: event-level and window-level.
 
-Cada pasta do projeto contém os artefatos e resultados correspondentes ao seu respectivo estudo.
+Each project folder contains the artifacts and results corresponding to its respective study.

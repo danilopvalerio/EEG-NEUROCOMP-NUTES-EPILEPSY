@@ -1,185 +1,185 @@
-# 🧠 Pipeline Computacional para Detecção Automatizada de Crises Epilépticas em Sinais de EEG
+# Computational Pipeline for Automated Seizure Detection in EEG Signals
 
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Scikit--Learn%20%7C%20XGBoost-orange?style=for-the-badge)
 ![Neuroscience](https://img.shields.io/badge/Neuroscience-EEG%20Processing-lightgrey?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-success?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-In%20Development-success?style=for-the-badge)
 
-Este repositório documenta o desenvolvimento, a implementação e a avaliação estatística de um pipeline avançado de _Machine Learning_ aplicado à Neurociência Computacional. O foco central desta pesquisa é a detecção automatizada de crises epilépticas através da análise de sinais contínuos de Eletroencefalograma (EEG), utilizando dados de acesso aberto do dataset multicêntrico **SeizeIT2**.
+This repository documents the development, implementation, and statistical evaluation of an advanced _Machine Learning_ pipeline applied to Computational Neuroscience. The central focus of this research is the automated detection of epileptic seizures through the analysis of continuous electroencephalogram (EEG) signals, using open-access data from the multicenter **SeizeIT2** dataset.
 
-A motivação por trás desta arquitetura é a busca pelo ponto de equilíbrio ideal (_trade-off_ clínico) entre uma alta **Sensibilidade** (capacidade algorítmica de detectar crises reais) e uma baixíssima **Taxa de Alarmes Falsos (FAR)**. Este balanço é o principal gargalo tecnológico para a viabilização de algoritmos de detecção em dispositivos vestíveis (_wearables_) de baixo consumo energético para monitoramento ambulatorial de longo prazo.
-
----
-
-## 📑 Índice
-
-1. [Fundamentação Teórica e Escopo](#1-fundamentação-teórica-e-escopo)
-2. [O Conjunto de Dados (SeizeIT2)](#2-o-conjunto-de-dados-seizeit2)
-3. [Arquitetura em Estágios (Notebooks)](#3-arquitetura-em-estágios-notebooks)
-   - [Fase 1: Pré-processamento e Extração](#fase-1-pré-processamento-e-extração-de-features)
-   - [Fase 2: Treinamento e Avaliação LOSO](#fase-2-treinamento-e-avaliação-loso)
-   - [Fase 3: Análise Clínica e Visualização](#fase-3-análise-clínica-e-visualização)
-4. [Métricas de Desempenho](#4-métricas-de-desempenho)
-5. [Estrutura de Diretórios](#5-estrutura-de-diretórios)
-6. [Guia de Instalação e Execução](#6-guia-de-instalação-e-execução)
-7. [Tecnologias Utilizadas](#7-tecnologias-utilizadas)
-8. [Contexto Acadêmico (PIBIC - UEPB)](#8-contexto-acadêmico)
+The motivation behind this architecture is the search for the ideal clinical _trade-off_ between high **Sensitivity** (the algorithmic ability to detect real seizures) and a very low **False Alarm Rate (FAR)**. This balance is the main technological bottleneck for enabling detection algorithms in low-power wearable devices for long-term ambulatory monitoring.
 
 ---
 
-## 1. Fundamentação Teórica e Escopo
+## 📑 Index
 
-A epilepsia é um distúrbio neurológico caracterizado por descargas elétricas anormais e excessivas no cérebro. O padrão-ouro para diagnóstico é o monitoramento por Vídeo-EEG em ambiente hospitalar, o que é custoso, intrusivo e limitado a curtos períodos. O desenvolvimento de soluções algorítmicas de aprendizado de máquina permite a transição desse monitoramento para o dia a dia do paciente.
-
-Este projeto não apenas treina modelos preditivos, mas constrói um ecossistema completo de tratamento de sinais biológicos, lidando com os desafios inerentes ao EEG: extrema presença de ruídos (musculares, oculares, elétricos) e severo desbalanceamento de classes (pacientes passam a esmagadora maioria do tempo em estado interictal/sem crise).
-
----
-
-## 2. O Conjunto de Dados (SeizeIT2)
-
-O pipeline foi validado contra a coorte de pacientes do dataset **SeizeIT2** (identificador OpenNeuro `ds005873`).
-
-- **Natureza:** Dados de Eletroencefalografia clínica contínua.
-- **Formato de Arquivo:** EDF (_European Data Format_).
-- **Anotações (Ground Truth):** Eventos de crise marcados minuciosamente por especialistas clínicos (identificados nos metadados como `eventType = sz*`).
-- **Integração Cloud:** A etapa de aquisição dispensa o download manual terabyte a terabyte. O pipeline se conecta diretamente ao _Amazon S3_ hospedado pelo OpenNeuro usando `boto3`, vasculhando os diretórios e transferindo estritamente os arquivos relevantes para a modelagem.
+1. [Theoretical Background and Scope](#1-theoretical-background-and-scope)
+2. [The Dataset (SeizeIT2)](#2-the-dataset-seizeit2)
+3. [Stage-Based Architecture (Notebooks)](#3-stage-based-architecture-notebooks)
+   - [Stage 1: Preprocessing and Feature Extraction](#stage-1-preprocessing-and-feature-extraction)
+   - [Stage 2: Training and LOSO Evaluation](#stage-2-training-and-loso-evaluation)
+   - [Stage 3: Clinical Analysis and Visualization](#stage-3-clinical-analysis-and-visualization)
+4. [Performance Metrics](#4-performance-metrics)
+5. [Directory Structure](#5-directory-structure)
+6. [Installation and Execution Guide](#6-installation-and-execution-guide)
+7. [Technologies Used](#7-technologies-used)
+8. [Academic Context (PIBIC - UEPB)](#8-academic-context)
 
 ---
 
-## 3. Arquitetura em Estágios (Notebooks)
+## 1. Theoretical Background and Scope
 
-A modularidade foi priorizada para permitir que pesquisadores ajustem etapas específicas (como a frequência de corte de um filtro) sem precisar reprocessar e retreinar toda a rede estrutural. O código-fonte está dividido em 3 ambientes Jupyter.
+Epilepsy is a neurological disorder characterized by abnormal and excessive electrical discharges in the brain. The gold standard for diagnosis is Video-EEG monitoring in a hospital setting, which is expensive, intrusive, and limited to short periods. The development of machine learning-based solutions makes it possible to move this monitoring into the patient's daily life.
 
-### Fase 1: Pré-processamento e Extração de Features
-
-**(Arquivo: `notebook1_preprocessing_features.ipynb`)**
-
-Esta fase lida com a física e a matemática do sinal. É responsável por isolar a atividade cerebral de artefatos externos.
-
-- **Cadeia de Filtragem Digital (Motor: `mne`):**
-  1. **Filtro Passa-alta (0.5 Hz):** Projetado para remover o desvio de linha de base (_baseline wander_) associado a movimentos físicos e respiração.
-  2. **Filtro Notch (50 Hz):** Filtro rejeita-faixa com Q-factor elevado para anular o ruído harmônico gerado pela rede elétrica local durante a captura dos dados.
-  3. **Filtro Passa-baixa (40 Hz):** Atenua frequências superiores onde o ruído de contração muscular (EMG) costuma se sobrepor às ondas cerebrais significativas (Alfa, Beta, Delta, Teta).
-- **Suavização Híbrida (WOSG):** Aplicação de uma Transformada _Wavelet_ (`PyWavelets`) seguida por uma filtragem polinomial de Savitzky-Golay, refinando a morfologia da onda.
-- **Segmentação Temporal:** O fluxo contínuo de EEG não pode ser processado de uma vez. Ele é dividido usando uma técnica de janela deslizante (_sliding window_) com resoluções configuráveis de **4, 5 e 6 segundos** operando com **50% de sobreposição**.
-- **Engenharia de Atributos:** Mapeamento do sinal filtrado em bancos de características estatísticas (FS-A, FS-B, FS-C), variando de momentos estatísticos básicos (média, variância, curtose) a estimativas de entropia e densidade espectral de potência (PSD).
-- **Output:** Gera o artefato `pipeline_meta.json`, que atua como um ponteiro de memória persistente para a próxima fase.
-
-### Fase 2: Treinamento e Avaliação LOSO
-
-**(Arquivo: `notebook2_training.ipynb`)**
-
-Esta fase é o núcleo de Inteligência Artificial do pipeline. Seu desenho metodológico impede o vazamento de dados e foca em cenários do mundo real.
-
-- **Paradigma de Validação - LOSO (_Leave-One-Subject-Out_):** Essencial na área da saúde. Se o dataset possui 20 pacientes, o modelo é treinado usando 19 pacientes e testado em 1 paciente virgem de contato com o algoritmo. Esse processo se repete 20 vezes (uma para cada paciente isolado). Isso testa a capacidade real de generalização cerebral do modelo.
-- **Tratamento de Desbalanceamento Intenso:** A aplicação de _Undersampling_ (técnicas de subamostragem em razões de 1:3 e 1:5). **Importante:** Isso é aplicado estritamente no conjunto de treinamento para evitar que o modelo sofra viés em direção à classe majoritária, mantendo o _test set_ intacto.
-- **Seleção de Características (Dimensionality Reduction):** Para evitar a maldição da dimensionalidade, os modelos são submetidos a uma pré-etapa de `SelectKBest` com pontuação `mutual_info_classif`, isolando os marcadores mais discriminativos.
-- **Grid de Experimentos:** O pipeline não roda apenas um modelo. Ele itera sobre **54 configurações distintas**, cruzando os 3 tamanhos de janela, os 3 pacotes de _features_, as taxas de balanceamento e testando diferentes estimadores (_XGBoost_, _Random Forest_ e _Support Vector Machines_).
-
-### Fase 3: Análise Clínica e Visualização
-
-**(Arquivo: `notebook3_analysis.ipynb`)**
-
-A transição da avaliação de _Machine Learning_ puro para a avaliação Neuromédica.
-
-- **Conversão de Janela para Evento:** O paciente não tem uma "crise de 4 segundos", ele tem um evento contínuo. Este notebook funde as predições temporais curtas de volta em eventos prolongados, avaliando se o sistema conseguiria alertar um cuidador a tempo.
-- **Otimização Multiobjetivo (Frente de Pareto):** Comparações de _Trade-off_ entre detecções corretas vs geração de fadiga de alarmes. Quais configurações garantem o máximo possível de segurança para o paciente (Sensibilidade) sem inviabilizar o uso do dispositivo por alarmar o tempo todo (FAR)?
-- **Comparativo V2 vs Baseline:** Análise quantitativa profunda atestando o ganho numérico trazido pelas técnicas implementadas (filmagens extras, seleção de atributos).
-- **Exportação de Artefatos Gráficos:** Responsável pela geração em alta fidelidade (`dpi=300`) dos boxplots, gráficos de dispersão e fronteiras de decisão (ex: `fig_07_pareto_front.png`, `fig_06_tradeoff_sensitivity_far.png`) essenciais para relatórios acadêmicos.
+This project does more than train predictive models; it builds a complete ecosystem for biological signal processing, dealing with the inherent challenges of EEG: heavy noise presence (muscle, eye, and electrical artifacts) and severe class imbalance (patients spend the overwhelming majority of time in the interictal/seizure-free state).
 
 ---
 
-## 4. Métricas de Desempenho
+## 2. The Dataset (SeizeIT2)
 
-O pipeline calcula duas categorias distintas de métricas:
+The pipeline was validated against the patient cohort from the **SeizeIT2** dataset (OpenNeuro identifier `ds005873`).
 
-**Métricas em Nível de Janela (_Window-Level_):** Úteis para debugar a convergência matemática do modelo.
-
-- _Acurácia_, _Precision_, _Recall_, _F1-Score_, _AUC-PR_ (Área sob a curva de Precisão-Recall).
-
-**Métricas em Nível de Evento Clínico (_Event-Level_):** O real balizador da utilidade do projeto.
-
-- **Event Sensitivity:** Porcentagem de crises epilépticas registradas no EEG que o algoritmo sinalizou com sucesso.
-- **Event FAR (_False Alarm Rate per hour_):** Quantidade de alertas errôneos disparados por cada hora ininterrupta de monitoramento. Valores altos causam rejeição clínica do sistema.
+- **Nature:** Continuous clinical electroencephalography data.
+- **File Format:** EDF (_European Data Format_).
+- **Annotations (Ground Truth):** Seizure events carefully marked by clinical experts (identified in the metadata as `eventType = sz*`).
+- **Cloud Integration:** The acquisition stage avoids manual terabyte-by-terabyte downloads. The pipeline connects directly to the OpenNeuro-hosted _Amazon S3_ bucket using `boto3`, scanning directories and transferring only the files relevant to modeling.
 
 ---
 
-## 5. Estrutura de Diretórios
+## 3. Stage-Based Architecture (Notebooks)
 
-O repositório está organizado para separar explicitamente dados brutos, artefatos gerados e códigos operacionais:
+Modularity was prioritized so that researchers can adjust specific stages (such as a filter cutoff frequency) without having to reprocess and retrain the entire pipeline. The source code is split into 3 Jupyter environments.
+
+### Stage 1: Preprocessing and Feature Extraction
+
+**(File: `notebook1_preprocessing_features.ipynb`)**
+
+This stage deals with the physics and mathematics of the signal. It is responsible for isolating brain activity from external artifacts.
+
+- **Digital Filtering Chain (Engine: `mne`):**
+  1. **High-Pass Filter (0.5 Hz):** Designed to remove baseline wander associated with physical movement and breathing.
+  2. **Notch Filter (50 Hz):** A high-Q band-stop filter used to eliminate harmonic noise generated by the local power grid during data capture.
+  3. **Low-Pass Filter (40 Hz):** Attenuates higher frequencies where muscle contraction noise (EMG) often overlaps with meaningful brain waves (Alpha, Beta, Delta, Theta).
+- **Hybrid Smoothing (WOSG):** Application of a _Wavelet_ transform (`PyWavelets`) followed by Savitzky-Golay polynomial filtering, refining the waveform morphology.
+- **Temporal Segmentation:** Continuous EEG cannot be processed all at once. It is split using a sliding window technique with configurable resolutions of **4, 5, and 6 seconds** operating with **50% overlap**.
+- **Feature Engineering:** Mapping the filtered signal into statistical feature sets (FS-A, FS-B, FS-C), ranging from basic statistical moments (mean, variance, kurtosis) to entropy estimates and power spectral density (PSD).
+- **Output:** Generates the `pipeline_meta.json` artifact, which acts as a persistent memory pointer for the next stage.
+
+### Stage 2: Training and LOSO Evaluation
+
+**(File: `notebook2_training.ipynb`)**
+
+This stage is the AI core of the pipeline. Its methodological design prevents data leakage and focuses on real-world scenarios.
+
+- **LOSO Validation Paradigm (_Leave-One-Subject-Out_):** Essential in healthcare. If the dataset has 20 patients, the model is trained on 19 patients and tested on 1 patient that has never interacted with the algorithm. This process is repeated 20 times (once for each isolated patient). It tests the model's real brain-level generalization capability.
+- **Severe Imbalance Handling:** Application of _Undersampling_ (subsampling techniques at ratios of 1:3 and 1:5). **Important:** This is applied strictly to the training set to prevent the model from becoming biased toward the majority class, while keeping the _test set_ intact.
+- **Feature Selection (Dimensionality Reduction):** To avoid the curse of dimensionality, the models go through a `SelectKBest` pre-step with `mutual_info_classif` scoring, isolating the most discriminative markers.
+- **Experiment Grid:** The pipeline does not run only one model. It iterates over **54 distinct configurations**, combining 3 window sizes, 3 feature bundles, balancing ratios, and different estimators (_XGBoost_, _Random Forest_, and _Support Vector Machines_).
+
+### Stage 3: Clinical Analysis and Visualization
+
+**(File: `notebook3_analysis.ipynb`)**
+
+The transition from pure _Machine Learning_ evaluation to neuromedical evaluation.
+
+- **Window-to-Event Conversion:** The patient does not have a "4-second seizure"; they have a continuous event. This notebook merges short temporal predictions back into extended events, evaluating whether the system could alert a caregiver in time.
+- **Multi-Objective Optimization (Pareto Front):** _Trade-off_ comparisons between correct detections and alarm fatigue generation. Which configurations maximize patient safety (Sensitivity) as much as possible without making the device unusable by alarming all the time (FAR)?
+- **V2 vs Baseline Comparison:** In-depth quantitative analysis confirming the numerical gain brought by the implemented techniques (additional features, feature selection).
+- **Graph Artifact Export:** Responsible for high-fidelity (`dpi=300`) generation of boxplots, scatter plots, and decision boundaries (e.g. `fig_07_pareto_front.png`, `fig_06_tradeoff_sensitivity_far.png`) essential for academic reports.
+
+---
+
+## 4. Performance Metrics
+
+The pipeline calculates two distinct categories of metrics:
+
+**Window-Level Metrics:** Useful for debugging the model's mathematical convergence.
+
+- _Accuracy_, _Precision_, _Recall_, _F1-Score_, _AUC-PR_ (Area Under the Precision-Recall Curve).
+
+**Clinical Event-Level Metrics:** The real measure of the project's usefulness.
+
+- **Event Sensitivity:** Percentage of epileptic seizures recorded in the EEG that the algorithm successfully flagged.
+- **Event FAR (_False Alarm Rate per hour_):** Number of incorrect alerts triggered per uninterrupted hour of monitoring. High values cause clinical rejection of the system.
+
+---
+
+## 5. Directory Structure
+
+The repository is organized to explicitly separate raw data, generated artifacts, and operational code:
 
 ```text
 ├── data/
-│   ├── raw_edf/                 # Arquivos originais intactos do OpenNeuro (S3)
-│   ├── processed/               # Sinais após aplicação de filtros e limpeza
-│   ├── features/                # Matrizes .npy / .csv de atributos extraídos (FS-A/B/C)
-│   └── pipeline_meta.json       # Manifesto JSON que guia a interoperabilidade
+│   ├── raw_edf/                 # Original untouched files from OpenNeuro (S3)
+│   ├── processed/               # Signals after filtering and cleaning
+│   ├── features/                # .npy / .csv matrices of extracted attributes (FS-A/B/C)
+│   └── pipeline_meta.json       # JSON manifest that guides interoperability
 ├── notebooks/
 │   ├── notebook1_preprocessing_features.ipynb
 │   ├── notebook2_training.ipynb
 │   └── notebook3_analysis.ipynb
 ├── results/
-│   ├── csv/                     # Logs detalhados (results_baseline.csv, results_v2.csv)
-│   └── figures/                 # Repositório de gráficos salvos pelo notebook 3
-├── requirements.txt             # Árvore de dependências do Python
-└── README.md                    # Documentação do projeto
+│   ├── csv/                     # Detailed logs (results_baseline.csv, results_v2.csv)
+│   └── figures/                 # Repository of plots saved by notebook 3
+├── requirements.txt             # Python dependency tree
+└── README.md                    # Project documentation
 ```
 
-## 6. Guia de Instalação e Execução
+## 6. Installation and Execution Guide
 
-Este projeto foi validado em ambiente Python 3.9+.
+This project was validated in a Python 3.9+ environment.
 
-**Passo 1: Clonar e isolar o ambiente**
+**Step 1: Clone and isolate the environment**
 
-Recomenda-se veementemente a não instalação dos pacotes de neurociência na sua máquina global devido a potenciais conflitos de dependência do scipy e mne.
+It is strongly recommended not to install the neuroscience packages on your global machine because of potential dependency conflicts with scipy and mne.
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
-cd <NOME_DA_PASTA>
+git clone <REPOSITORY_URL>
+cd <FOLDER_NAME>
 
-# Criação do ambiente virtual (VENV)
+# Virtual environment creation (VENV)
 python -m venv venv
 
-# Ativação (Windows)
+# Activation (Windows)
 venv\Scripts\activate
 
-# Ativação (Linux/macOS)
+# Activation (Linux/macOS)
 source venv/bin/activate
 ```
 
-**Passo 2: Instalação de Bibliotecas Científicas**
+**Step 2: Install Scientific Libraries**
 
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-**Passo 3: Ordem de Invocação**
+**Step 3: Execution Order**
 
-Abra o Jupyter (`jupyter notebook`) e execute estritamente na ordem numérica:
+Open Jupyter (`jupyter notebook`) and run strictly in numerical order:
 
-1. Execute o **Notebook 1** na íntegra. ⚠️ O download do S3 via Boto3 e o processamento de Wavelets podem levar de dezenas de minutos a horas dependendo do seu hardware e banda de internet.
-2. Verifique a criação do `data/pipeline_meta.json`.
-3. Execute o **Notebook 2** (Treinamento LOSO).
-4. Por fim, execute o **Notebook 3** para processar as saídas CSV e gerar os gráficos finais em `results/figures/`.
+1. Run **Notebook 1** in full. ⚠️ Downloading from S3 via Boto3 and processing Wavelets can take from tens of minutes to hours depending on your hardware and internet bandwidth.
+2. Check that `data/pipeline_meta.json` was created.
+3. Run **Notebook 2** (LOSO Training).
+4. Finally, run **Notebook 3** to process the CSV outputs and generate the final plots in `results/figures/`.
 
 ---
 
-## 7. Tecnologias Utilizadas
+## 7. Technologies Used
 
-A base algorítmica deste projeto se sustenta nos seguintes pilares open-source:
+The algorithmic foundation of this project relies on the following open-source pillars:
 
-- **Core & Vetorização:** `numpy`, `pandas`, `scipy`
-- **Neurociência & Sinais:** `mne` (MNE-Python), `PyWavelets`
+- **Core & Vectorization:** `numpy`, `pandas`, `scipy`
+- **Neuroscience & Signals:** `mne` (MNE-Python), `PyWavelets`
 - **Machine Learning:** `scikit-learn` (SVM, Random Forest, Metrics), `xgboost` (Gradient Boosting)
-- **Visualização Analítica:** `matplotlib`, `seaborn`
-- **Integração AWS:** `boto3`
-- **Utilidades:** `tqdm` (Barras de progresso essenciais para longos processamentos), `json`, `os`, `pathlib`
+- **Analytical Visualization:** `matplotlib`, `seaborn`
+- **AWS Integration:** `boto3`
+- **Utilities:** `tqdm` (progress bars essential for long processing jobs), `json`, `os`, `pathlib`
 
 ---
 
-## 8. Contexto Acadêmico
+## 8. Academic Context
 
-Este pipeline computacional foi integralmente arquitetado e desenvolvido por **Danilo Pedro da Silva Valério**, aluno de graduação do curso de Bacharelado em Ciência da Computação da Universidade Estadual da Paraíba (UEPB), Campus Campina Grande.
+This computational pipeline was fully designed and developed by **Danilo Pedro da Silva Valério**, an undergraduate student in the Computer Science program at the State University of Paraíba (UEPB), Campina Grande campus.
 
-O desenvolvimento consolida os esforços de pesquisa vinculados ao **Programa Institucional de Bolsas de Iniciação Científica (PIBIC)**, sob a orientação especializada da Professora **Sabrina de Figueiredo Souto**. A pesquisa investiga diretamente os impactos, o mapeamento e a viabilidade da aplicação moderna de Inteligência Artificial e Aprendizado de Máquina no nicho complexo da Neurociência Computacional.
+The work consolidates research efforts linked to the **Institutional Program for Scientific Initiation Scholarships (PIBIC)**, under the expert supervision of Professor **Sabrina de Figueiredo Souto**. The research directly investigates the impacts, mapping, and feasibility of applying modern Artificial Intelligence and Machine Learning to the complex niche of Computational Neuroscience.

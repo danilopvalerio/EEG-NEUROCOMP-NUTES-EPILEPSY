@@ -1,6 +1,6 @@
-# 🧠 Epileptic Seizure Detection — CHB-MIT (LOOCV)
+# Epileptic Seizure Detection — CHB-MIT (LOOCV)
 
-Pipeline completo para detecção de crises epilépticas utilizando o dataset CHB-MIT com abordagem **subject-specific**, validação **LOOCV (Leave-One-Out Cross-Validation)** e comparação entre:
+Complete pipeline for epileptic seizure detection using the CHB-MIT dataset with a **subject-specific** approach, **LOOCV (Leave-One-Out Cross-Validation)** validation, and comparison among:
 
 - SVM (RBF)
 - XGBoost
@@ -8,25 +8,25 @@ Pipeline completo para detecção de crises epilépticas utilizando o dataset CH
 
 ---
 
-## 📂 Estrutura do Projeto
+## 📂 Project Structure
 
 ```
-OBS: Lembre-se de criar as pastas data e data_processed
+NOTE: Remember to create the data and data_processed folders
 .
-├── data/                  # Dataset bruto (CHB-MIT)
+├── data/                  # Raw dataset (CHB-MIT)
 │   ├── chb01
 │   ├── chb02
 │   ├── chb03
 │   ├── chb04
 │   └── chb05
 │
-├── data_processed/        # Features extraídas e janelas processadas
+├── data_processed/        # Extracted features and processed windows
 │
 ├── results/
-│   ├── global/            # Resultados agregados
-│   └── subject_specific/  # Resultados por paciente
+│   ├── global/            # Aggregated results
+│   └── subject_specific/  # Patient-specific results
 │
-├── utils/                 # Funções auxiliares
+├── utils/                 # Helper functions
 │
 ├── pipeline_epilepsia_final.ipynb
 ├── XGBoost.yml
@@ -39,28 +39,28 @@ OBS: Lembre-se de criar as pastas data e data_processed
 ## 📊 Dataset
 
 - CHB-MIT Scalp EEG Database
-- Frequência de amostragem: 256 Hz
-- EEG multicanal
-- Classificação binária (crise vs não-crise)
+- Sampling frequency: 256 Hz
+- Multichannel EEG
+- Binary classification (seizure vs non-seizure)
 
 ---
 
-## 🧪 Metodologia
+## 🧪 Methodology
 
-### 🔹 Estratégia
+### 🔹 Strategy
 
-- Treinamento subject-specific
-- Janelas de 4 segundos
-- LOOCV por trial
-- Extração de features manuais (tempo/frequência)
+- Subject-specific training
+- 4-second windows
+- LOOCV per trial
+- Manual feature extraction (time/frequency)
 
-### 🔹 Modelos avaliados
+### 🔹 Evaluated Models
 
-- SVM (kernel RBF)
+- SVM (RBF kernel)
 - Random Forest
 - XGBoost
 
-### 🔹 Métricas
+### 🔹 Metrics
 
 - Sensitivity
 - Specificity
@@ -69,31 +69,31 @@ OBS: Lembre-se de criar as pastas data e data_processed
 
 ---
 
-## ⏱ Comparação de Tempo (LOOCV)
+## ⏱ Runtime Comparison (LOOCV)
 
-| Modelo        | Tempo Total |
-| ------------- | ----------- |
-| SVM (RBF)     | ~1 min      |
-| XGBoost       | ~9 min      |
-| Random Forest | ~71 min     |
+| Model         | Total Time |
+| ------------- | ---------- |
+| SVM (RBF)     | ~1 min     |
+| XGBoost       | ~9 min     |
+| Random Forest | ~71 min    |
 
 ---
 
-## 📈 Resultados
+## 📈 Results
 
-Resultados individuais:
+Individual results:
 
 ```
 results/subject_specific/
 ```
 
-Resultados agregados:
+Aggregated results:
 
 ```
 results/global/
 ```
 
-Gráficos:
+Plots:
 
 - comparacao_modelos.png
 - filtro_comparacao.png
@@ -101,16 +101,16 @@ Gráficos:
 
 ---
 
-## ⚙️ Ambiente
+## ⚙️ Environment
 
-Criar ambiente com conda:
+Create the environment with conda:
 
 ```
 conda env create -f XGBoost.yml
 conda activate xgboost
 ```
 
-Ou usando venv:
+Or using venv:
 
 ```
 python -m venv .venv
@@ -120,26 +120,26 @@ pip install -r requirements.txt
 
 ---
 
-## 🚀 Como Executar
+## 🚀 How to Run
 
-Abrir:
+Open:
 
 ```
 pipeline_epilepsia_final.ipynb
 ```
 
-Executar as células na ordem.
+Run the cells in order.
 
 ---
 
-## 🎯 Objetivo
+## 🎯 Goal
 
-- Comparar modelos clássicos em EEG
-- Avaliar custo computacional
-- Analisar viabilidade para sistemas embarcados
+- Compare classical EEG models
+- Evaluate computational cost
+- Analyze feasibility for embedded systems
 
 ---
 
-## 📌 Observação
+## 📌 Note
 
-O dataset não está versionado (ver `.gitignore`).
+The dataset is not versioned (see `.gitignore`).
