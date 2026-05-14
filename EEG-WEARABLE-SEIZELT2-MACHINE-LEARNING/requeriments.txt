@@ -1,0 +1,11 @@
+boto3
+mne
+scipy
+scikit-learn
+PyWavelets
+tqdm
+numpy
+pandas
+matplotlib
+xgboost
+seaborn
